@@ -1,42 +1,36 @@
-// features/workspaceSlice.js
+// src/features/workspaceSlice.js
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import API from "../configs/api";
 
 export const fetchWorkspaces = createAsyncThunk(
   "workspace/fetchWorkspaces",
-  // CHANGED: We now expect a 'token' string, not a function
+  // CHANGED: Accept 'token' (string) directly
   async (token, thunkAPI) => {
     try {
-      // Validate we actually got a string
       if (!token || typeof token !== "string") {
-        console.warn("[fetchWorkspaces] Aborting: No valid token provided.");
-        return thunkAPI.rejectWithValue({ message: "No authentication token provided" });
+        return thunkAPI.rejectWithValue({ message: "No valid token provided" });
       }
 
-      console.info("[fetchWorkspaces] using token...");
-
-      // Call the API with the token in headers
+      // Pass token in headers
       const response = await API.get("/api/workspaces", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.info("[fetchWorkspaces] response:", response);
-
-      // Handle response structure (checking response.data or response.data.workspaces)
+      // Extract workspaces array safely from your API response structure
       const workspacesFromResponse =
         response?.data?.workspaces ?? response?.data ?? [];
 
-      // Ensure it is an array
       if (!Array.isArray(workspacesFromResponse)) {
-        const msg = `[fetchWorkspaces] Unexpected response shape. Expected array but got ${typeof workspacesFromResponse}`;
-        console.warn(msg, workspacesFromResponse);
-        return thunkAPI.rejectWithValue({ message: msg, payload: workspacesFromResponse });
+        return thunkAPI.rejectWithValue({
+          message: "Invalid response format",
+          payload: workspacesFromResponse,
+        });
       }
 
       return workspacesFromResponse;
     } catch (error) {
-      console.error("[fetchWorkspaces] error:", error);
-      const message = error?.response?.data?.message ?? error?.message ?? "Unknown error";
+      const message =
+        error?.response?.data?.message ?? error?.message ?? "Unknown error";
       return thunkAPI.rejectWithValue({ message, raw: error });
     }
   }
@@ -74,18 +68,18 @@ const workspaceSlice = createSlice({
       state.error = null;
       const incoming = Array.isArray(action.payload) ? action.payload : [];
 
-      // Normalize projects array safely
       state.workspaces = incoming.map((w) => ({
         ...w,
         projects: Array.isArray(w.projects) ? w.projects : [],
       }));
 
-      // Auto-select logic: Restore from localStorage or pick the first one
+      // Auto-select workspace logic
       if (state.workspaces.length > 0) {
         const savedWorkspaceId = localStorage.getItem("currentWorkspaceId");
-        // Find saved one OR default to first
-        const workspaceToSet = state.workspaces.find((w) => w.id === savedWorkspaceId) || state.workspaces[0];
-        
+        const workspaceToSet =
+          state.workspaces.find((w) => w.id === savedWorkspaceId) ||
+          state.workspaces[0];
+
         state.currentWorkspace = workspaceToSet;
         localStorage.setItem("currentWorkspaceId", workspaceToSet.id);
       } else {
@@ -96,7 +90,6 @@ const workspaceSlice = createSlice({
     builder.addCase(fetchWorkspaces.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload?.message ?? "Failed to fetch workspaces";
-      console.warn("[workspaceSlice] fetchWorkspaces rejected:", action.payload ?? action.error);
     });
   },
 });
