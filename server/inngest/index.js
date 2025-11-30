@@ -28,7 +28,7 @@ const syncUserCreation=inngest.createFunction(
 
 const syncUserDeletion=inngest.createFunction(
     {id: 'delete-user-from-clerk'},
-    {event:'cleark/user.deleted'},
+    {event:'clerk/user.deleted'},
     async({ event })=>{
         const{data}=event
         await prisma.user.delete({
@@ -45,7 +45,7 @@ const syncUserDeletion=inngest.createFunction(
 
 const syncUserUpdation=inngest.createFunction(
     {id: 'update-user-from-clerk'},
-    {event:'cleark/user.updated'},
+    {event:'clerk/user.updated'},
     async({ event })=>{
         const{data}=event
         await prisma.user.update({
