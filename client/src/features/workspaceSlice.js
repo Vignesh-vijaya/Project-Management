@@ -1,9 +1,20 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { dummyWorkspaces } from "../assets/assets";
+import API from "../configs/api";
+
+export const  fetchWorkspaces = createAsyncThunk('workspace/fetchWorkspaces', async (gettoken) => {
+    try {
+        const {data} = await API.get('/api/workspaces', { headers: { Authorization: `Bearer ${await gettoken()}` } });
+        return data.workspaces || [];
+    } catch (error) {
+        console.error("Error fetching workspaces:", error);
+        return [];
+
+    }});
 
 const initialState = {
-    workspaces: dummyWorkspaces || [],
-    currentWorkspace: dummyWorkspaces[1],
+    workspaces: [],
+    currentWorkspace: null,
     loading: false,
 };
 
@@ -103,8 +114,29 @@ const workspaceSlice = createSlice({
             );
         }
 
+    },
+    extraReducers: (builder) => {
+        // add extra reducers here if needed
+        builder.addCase(fetchWorkspaces.pending, (state) => {
+            state.loading = true;
+    });
+        builder.addCase(fetchWorkspaces.fulfilled, (state, action) => {
+            state.loading = false;
+            state.workspaces = action.payload;
+            if (action.payload.length > 0) {
+                const savedWorkspaceId = localStorage.getItem("currentWorkspaceId");
+                const workspaceToSet = action.payload.find((w) => w.id === savedWorkspaceId) || action.payload[0];
+                state.currentWorkspace = workspaceToSet;
+                localStorage.setItem("currentWorkspaceId", workspaceToSet.id);
+            } else {
+                state.currentWorkspace = action.payload[0] || null;
+            }
+            state.loading = false;
+        });
+        builder.addCase(fetchWorkspaces.rejected, (state) => {
+            state.loading = false;
+        });
     }
 });
-
 export const { setWorkspaces, setCurrentWorkspace, addWorkspace, updateWorkspace, deleteWorkspace, addProject, addTask, updateTask, deleteTask } = workspaceSlice.actions;
 export default workspaceSlice.reducer;

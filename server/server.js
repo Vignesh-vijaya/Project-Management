@@ -5,6 +5,9 @@ import cors from 'cors';
 import { clerkMiddleware } from '@clerk/express';
 import { serve } from "inngest/express";
 import { inngest, functions } from "./inngest/index.js"
+import workspaceRouter from './routes/workspaceRoutes.js';
+import workspaceRouter from './routes/workspaceRoutes.js';
+import { protect } from './middlewares/authMiddleware.js';
 
 // 2. Import the prisma client from your new file
 import { prisma } from './db.js';
@@ -21,6 +24,11 @@ app.get('/', (req, res) => {
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
+//Routes
+
+app.use('/api/workspaces', protect,workspaceRouter);    
+
+
 // 3. Add a test route to verify Database connection
 app.get('/db-test', async (req, res) => {
     try {
@@ -34,6 +42,8 @@ app.get('/db-test', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

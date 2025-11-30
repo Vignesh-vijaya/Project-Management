@@ -6,17 +6,26 @@ import { useDispatch, useSelector } from 'react-redux'
 import { loadTheme } from '../features/themeSlice'
 import { Loader2Icon } from 'lucide-react'
 import {useUser,SignIn} from '@clerk/clerk-react'
+import { useAuth } from '@clerk/clerk-react'
 
 const Layout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-    const { loading } = useSelector((state) => state.workspace)
+    const { loading,workspaces } = useSelector((state) => state.workspace)
     const dispatch = useDispatch()
     const {user,isLoaded}=useUser()
+    const {getToken}=useAuth()
 
     // Initial load of theme
     useEffect(() => {
         dispatch(loadTheme())
     }, [])
+
+    //intial load of workspaces can be done here
+    useEffect(() => {
+        if (isLoaded && user && workspaces.length === 0) {
+            dispatch(fetchWorkspaces(getToken));
+        }
+    }, [user,isLoaded])
 
     if(!user){
         return(
