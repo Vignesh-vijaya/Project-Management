@@ -27,7 +27,7 @@ const syncUserCreation=inngest.createFunction(
 //inngest function to save user deletion to a database
 
 const syncUserDeletion=inngest.createFunction(
-    {id: 'sync-user-from-clerk'},
+    {id: 'delete-user-from-clerk'},
     {event:'cleark/user.deleted'},
     async({ event })=>{
         const{data}=event

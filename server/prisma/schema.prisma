@@ -5,8 +5,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Remove 'url' and 'directUrl' from here completely
+  url      = env("DATABASE_URL")
 }
+
 
 enum WorkspaceRole {
     ADMIN
