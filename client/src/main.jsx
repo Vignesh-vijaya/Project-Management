@@ -7,11 +7,13 @@ import { Provider } from 'react-redux'
 import { ClerkProvider } from '@clerk/clerk-react'
 
 // Import your Publishable Key
+// client/src/main.jsx
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing Publishable Key')
+  throw new Error('Missing Publishable Key') // <--- This stops your app from rendering
 }
+
 
 createRoot(document.getElementById('root')).render(
     <BrowserRouter>
